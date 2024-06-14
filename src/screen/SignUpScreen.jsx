@@ -2,7 +2,9 @@ import {
   View,
   Text,
   TouchableOpacity,
+  KeyboardAvoidingView,
   TextInput,
+  ToastAndroid
 } from 'react-native';
 import React, {useState} from 'react';
 import Background from '../Background';
@@ -17,7 +19,7 @@ const validationSchema = Yup.object().shape({
     .matches(/^[a-zA-Z]+$/, 'Invalid First Name')
     .required('FirstName is required'),
   last: Yup.string()
-    .matches(/^[a-zA-Z]+$/, 'Invalid First Name')
+    .matches(/^[a-zA-Z]+$/, 'Invalid Last Name')
     .required('LastName is required'),
   email: Yup.string()
     .email('Invalid email address')
@@ -30,6 +32,30 @@ const validationSchema = Yup.object().shape({
 
 const SignUpScreen = ({navigation}) => {
   const [click, setClick] = useState(false);
+
+  const sendCred = (values) => {
+    fetch("http://192.168.126.143:3000/api/register", {             // set ipconfig in http://ipconfig:3000/api/register
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        "fname":values.first,
+        "lname":values.last,
+        "email": values.email,
+        "password": values.password,
+        "confirmpassword": values.confirmpassword
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        // console.warn(data);
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  };
+
   return (
     <Background>
       <View style={{alignItems: 'center', width: 360}}>
@@ -72,9 +98,15 @@ const SignUpScreen = ({navigation}) => {
           }}
           validationSchema={validationSchema}
           onSubmit={(values, {resetForm}) => {
-            console.warn(values);
+            // console.warn(values);
             resetForm();
-            navigation.navigate('Login'); // Navigate to Login screen
+            sendCred(values);
+            
+            ToastAndroid.show('Register Successfull !', ToastAndroid.SHORT);
+            setTimeout(()=>{
+              navigation.navigate('Login');
+            },1000)
+             // Navigate to Login screen
           }}>
           {({
             handleChange,
@@ -102,7 +134,7 @@ const SignUpScreen = ({navigation}) => {
                   fontSize: 17,
                 }}
               />
-              { errors.first ? 
+              { touched.first && errors.first ? 
                 <Text
                   style={{color: 'red', marginBottom: 2, marginHorizontal: 10}}>
                   {errors.first}

@@ -1,10 +1,17 @@
-import {View, Text, TouchableOpacity, TextInput} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ToastAndroid,
+  TextInput,
+} from 'react-native';
 import React from 'react';
 import Background from '../Background';
 import {darkgreen} from '../Constant';
 import Btn from '../Btn';
 import {Formik} from 'formik';
 import * as Yup from 'yup';
+// import ToastAndroid from 'react-native/Libraries/Components/ToastAndroid';
 
 // Validation schema
 const validationSchema = Yup.object().shape({
@@ -15,6 +22,39 @@ const validationSchema = Yup.object().shape({
 });
 
 const LoginScreen = ({navigation}) => {
+  const sendCred = values => {
+    fetch('http://192.168.126.143:3000/api/login', {
+      // set ipconfig in http://ipconfig:3000/api/login
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: values.email,
+        password: values.password,
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        // console.warn(data);  //data take only the token
+        if (data) {
+          // Assuming your API returns a success property on successful login
+
+          ToastAndroid.show('Login Successfull !', ToastAndroid.SHORT);
+
+          navigation.navigate('quiz');
+        } else {
+          // Handle login failure (show message, etc.)
+          console.warn('Login failed');
+          ToastAndroid.show('Login Failed !', ToastAndroid.SHORT);
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        ToastAndroid.show('An error occurred. Please try again.', ToastAndroid.SHORT);
+      });
+  };
+
   return (
     <Background>
       <View style={{alignItems: 'center', width: 360}}>
@@ -53,7 +93,10 @@ const LoginScreen = ({navigation}) => {
         <Formik
           initialValues={{email: '', password: ''}}
           validationSchema={validationSchema}
-          onSubmit={values => console.warn(values)}>
+          onSubmit={values => {
+            sendCred(values);
+            // console.warn(values);
+          }}>
           {({
             handleChange,
             handleBlur,
@@ -73,15 +116,17 @@ const LoginScreen = ({navigation}) => {
                   borderRadius: 100,
                   color: darkgreen,
                   paddingLeft: 20,
-                  paddingRight:5,
+                  paddingRight: 5,
                   width: 320,
-                  backgroundColor:'rgb(220,220,220)',
-                  marginVertical:12,
-                  fontSize:17
+                  backgroundColor: 'rgb(220,220,220)',
+                  marginVertical: 12,
+                  fontSize: 17,
                 }}
               />
               {touched.email && errors.email && (
-                <Text style={{color:'red', marginBottom:10}}>{errors.email}</Text>
+                <Text style={{color: 'red', marginBottom: 10}}>
+                  {errors.email}
+                </Text>
               )}
 
               <TextInput
@@ -94,15 +139,17 @@ const LoginScreen = ({navigation}) => {
                   borderRadius: 100,
                   color: darkgreen,
                   paddingLeft: 20,
-                  paddingRight:5,
+                  paddingRight: 5,
                   width: 320,
-                  backgroundColor:'rgb(220,220,220)',
-                  marginVertical:12,
-                  fontSize:17
+                  backgroundColor: 'rgb(220,220,220)',
+                  marginVertical: 12,
+                  fontSize: 17,
                 }}
               />
               {touched.password && errors.password && (
-                <Text style={{color:'red', marginBottom:10}}>{errors.password}</Text>
+                <Text style={{color: 'red', marginBottom: 10}}>
+                  {errors.password}
+                </Text>
               )}
 
               <View
@@ -123,7 +170,6 @@ const LoginScreen = ({navigation}) => {
                 bgcolor={darkgreen}
                 btnlabel="Login"
                 Press={handleSubmit}
-                // onPress={alert('Logged In')} // handleSubmit is sufficient to handle form submission
               />
             </View>
           )}
@@ -136,7 +182,7 @@ const LoginScreen = ({navigation}) => {
             justifyContent: 'center',
           }}>
           <Text style={{fontSize: 16, fontWeight: 'bold'}}>
-            Don't have an account ?
+            Don't have an account?
           </Text>
           <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
             <Text
